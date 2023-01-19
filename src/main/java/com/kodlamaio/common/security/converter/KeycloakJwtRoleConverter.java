@@ -13,6 +13,10 @@ import java.util.Map;
 public class KeycloakJwtRoleConverter implements Converter<Jwt, Collection<GrantedAuthority>> {
     @Override
     public Collection<GrantedAuthority> convert(Jwt jwt) {
+        return extractRoles(jwt);
+    }
+
+    private static Collection<GrantedAuthority> extractRoles(Jwt jwt) {
         Map<String, Object> claims = jwt.getClaims();
         Map<String, Object> realmAccess = (Map<String, Object>) claims.get("realm_access");
 
