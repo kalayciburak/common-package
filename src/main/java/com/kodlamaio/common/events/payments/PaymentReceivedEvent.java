@@ -13,7 +13,8 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class PaymentReceivedEvent {
     private String carId;
-    private String fullName;
+    private String customerId;
+    private String cardholder;
     private String modelName;
     private String brandName;
     private int modelYear;
@@ -21,4 +22,8 @@ public class PaymentReceivedEvent {
     private double totalPrice;
     private int rentedForDays;
     private LocalDateTime rentedAt;
+    private String customerUserName;
+    private String customerFirstName;
+    private String customerLastName;
+    private String customerEmail;
 }
