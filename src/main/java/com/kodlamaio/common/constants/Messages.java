@@ -48,6 +48,8 @@ public class Messages {
         public static final String Business = "BUSINESS_EXCEPTION";
         public static final String DataIntegrityViolation = "DATA_INTEGRITY_VIOLATION_EXCEPTION";
         public static final String Runtime = "RUNTIME_EXCEPTION";
+        public static final String Authentication = "AUTHENTICATION_EXCEPTION";
+        public static final String AccessDenied = "ACCESS_DENIED_EXCEPTION";
         public static final String Feign = "FEIGN_EXCEPTION";
     }
 }
