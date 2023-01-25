@@ -4,12 +4,14 @@ public class Paths {
     public static final String BasePrefix = "/api/v1";
     public static final String IdSuffix = "/{id}";
     public static final String ElasticsearchRepositoriesBasePackage = "com.kodlamaio.filterservice.repository";
+    public static final String[] SwaggerPaths = {"/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**", "/webjars/**"};
 
     public static class Inventory {
         public static class Car {
             public static final String Prefix = BasePrefix + "/cars";
             public static final String CheckAvailableSuffix = "/check-car-available" + IdSuffix;
             public static final String GetResponseSuffix = "/get-car-response" + IdSuffix;
+            public static final String[] CheckAvailableAndResponsePrefixes = {"/api/v1/cars/check-car-available/**", "/api/v1/cars/get-car-response/**"};
         }
 
         public static class Brand {
