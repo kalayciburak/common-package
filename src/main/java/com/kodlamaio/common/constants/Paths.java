@@ -3,6 +3,7 @@ package com.kodlamaio.common.constants;
 public class Paths {
     public static final String BasePrefix = "/api/v1";
     public static final String IdSuffix = "/{id}";
+    public static final String PrometheusMetricsPath = "/actuator/prometheus";
     public static final String ExceptionHandlerBasePackage = "com.kodlamaio.common.configuration.exceptions";
     public static final String ElasticsearchRepositoriesBasePackage = "com.kodlamaio.filterservice.repository";
     public static final String[] SwaggerPaths = {"/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**", "/webjars/**"};
