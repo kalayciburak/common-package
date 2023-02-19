@@ -6,7 +6,7 @@ public class Paths {
     public static final String PrometheusMetricsPath = "/actuator/prometheus";
     public static final String ExceptionHandlerBasePackage = "com.kodlamaio.common.configuration.exceptions";
     public static final String ElasticsearchRepositoriesBasePackage = "com.kodlamaio.filterservice.repository";
-    public static final String[] SwaggerPaths = {"/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**", "/webjars/**"};
+    public static final String[] SwaggerPaths = {"/swagger-ui/index.html", "/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**", "/webjars/**"};
 
     public static class Inventory {
         public static class Car {
