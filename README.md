@@ -1,7 +1,7 @@
 # Common Package
 
-Bu paket, birden fazla **Spring Boot** projesinde tekrar kullanılabilir **yardımcı sınıflar**, **konfigürasyonlar** ve *
-*bileşenler** sunar.
+Bu paket, birden fazla **Spring Boot** projesinde tekrar kullanılabilir **yardımcı sınıflar**, **konfigürasyonlar** ve
+**bileşenler** sunar.
 
 ## 🚀 Özellikler
 
