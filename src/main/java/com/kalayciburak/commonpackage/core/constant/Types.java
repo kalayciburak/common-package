@@ -37,5 +37,7 @@ public final class Types {
         public static final String BREACHED_PASSWORD = "ERROR: BREACHED_PASSWORD_EXCEPTION";
         public static final String ADMIN_CANNOT_BE_DELETED = "ERROR: ADMIN_CANNOT_BE_DELETED_EXCEPTION";
         public static final String ACCESS_DENIED = "ERROR: ACCESS_DENIED_EXCEPTION";
+        public static final String EMAIL_NOT_VERIFIED = "ERROR: EMAIL_NOT_VERIFIED_EXCEPTION";
+        public static final String INVALID_VERIFICATION_TOKEN = "ERROR: INVALID_VERIFICATION_TOKEN_EXCEPTION";
     }
 }

@@ -105,6 +105,8 @@ public final class Messages {
         public static final String BREACHED_PASSWORD = "Şifre güvenli değil.";
         public static final String ADMIN_CANNOT_BE_DELETED = "Admin kullanıcı silinemez.";
         public static final String INVALID_CREDENTIALS = "Geçersiz kullanıcı adı veya şifre.";
-        public static final String ACCESS_DENIED = "Erişim reddedildi.";
+        public static final String ACCESS_DENIED = "Erişim reddedildi. Yetkiniz yok.";
+        public static final String EMAIL_NOT_VERIFIED = "Email adresi doğrulanmamış.";
+        public static final String INVALID_VERIFICATION_TOKEN = "Geçersiz doğrulama kodu.";
     }
 }

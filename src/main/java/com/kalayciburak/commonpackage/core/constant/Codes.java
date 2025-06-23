@@ -41,5 +41,8 @@ public final class Codes {
         public static final String ADMIN_CANNOT_BE_DELETED = "3800";
         public static final String UNAUTHORIZED = "3900";
         public static final String ACCESS_DENIED = "4000";
+        public static final String CONFLICT = "4100";
+        public static final String EMAIL_NOT_VERIFIED = "4200";
+        public static final String INVALID_VERIFICATION_TOKEN = "4300";
     }
 }
