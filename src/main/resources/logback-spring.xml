@@ -1,5 +1,6 @@
 <configuration>
     <springProperty scope="context" name="springAppName" source="spring.application.name"/>
+    <springProperty scope="context" name="originHost" source="app.origin-host"/>
     <springProperty scope="context" name="graylogHost" source="graylog.host"/>
     <springProperty scope="context" name="graylogPort" source="graylog.port"/>
 
@@ -14,20 +15,19 @@
         <graylogPort>${graylogPort}</graylogPort>
         <maxChunkSize>508</maxChunkSize>
         <encoder class="de.siegmar.logbackgelf.GelfEncoder">
-            <originHost>127.0.0.1</originHost>
+            <originHost>${originHost}</originHost>
             <includeRawMessage>false</includeRawMessage>
             <includeMarker>true</includeMarker>
             <includeMdcData>true</includeMdcData>
             <includeCallerData>false</includeCallerData>
             <includeRootCauseData>false</includeRootCauseData>
             <includeLevelName>true</includeLevelName>
-
-            <shortPatternLayout class="ch.qos.logback.classic.PatternLayout">
+            <shortMessageLayout class="ch.qos.logback.classic.PatternLayout">
+                <pattern><![CDATA[%level | %X{traceId:-} | %replace(%m%nopex){' \| Detail:.*',''}]]></pattern>
+            </shortMessageLayout>
+            <fullMessageLayout class="ch.qos.logback.classic.PatternLayout">
                 <pattern>%m%nopex</pattern>
-            </shortPatternLayout>
-            <fullPatternLayout class="ch.qos.logback.classic.PatternLayout">
-                <pattern>%m%n</pattern>
-            </fullPatternLayout>
+            </fullMessageLayout>
             <staticField>app_name:${springAppName}</staticField>
             <staticField>os_arch:${os.arch}</staticField>
             <staticField>os_name:${os.name}</staticField>
