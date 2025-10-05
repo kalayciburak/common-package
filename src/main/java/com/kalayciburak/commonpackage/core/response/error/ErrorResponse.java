@@ -1,5 +1,6 @@
 package com.kalayciburak.commonpackage.core.response.error;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.kalayciburak.commonpackage.core.constant.Codes;
 import com.kalayciburak.commonpackage.core.constant.Messages;
 import com.kalayciburak.commonpackage.core.constant.Types;
@@ -8,31 +9,44 @@ import lombok.Getter;
 import lombok.Setter;
 import org.springframework.http.HttpStatus;
 
+/**
+ * <b>Hata durumlarını temsil eden response nesnesi.</b>
+ * <p>
+ * ErrorDetail bilgileri development ortamında görüntülenir, production'da null set edilir.
+ * Bu bilgiler Graylog'a traceId ile birlikte kaydedilir.
+ */
 @Setter
 @Getter
 public class ErrorResponse<T> extends Response {
     private HttpStatus status;
+
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private ErrorDetail detail;
 
     /**
-     * <b>Var olan bir {@code ErrorResponse} nesnesinden yeni bir hata nesnesi oluşturur.</b>
+     * <b>Var olan bir {@code ErrorResponse} nesnesinden yeni hata nesnesi oluşturur.</b>
+     * <p>
+     * TraceId aynı kalır böylece loglarda takip edilebilir.
      *
      * @param response Kopyalanacak hata nesnesi.
      */
     public ErrorResponse(ErrorResponse<?> response) {
-        super(response.type, response.code, response.message, false);
+        super(response.type, response.code, response.message, false, response.traceId);
         this.status = response.status;
-        this.detail = null;
+        this.detail = response.detail;
     }
 
     /**
      * <b>Belirli hata bilgileri ve neden ile yeni bir {@code ErrorResponse} nesnesi oluşturur.</b>
+     * <p>
+     * Hata detayları internal olarak saklanır ve loglama için kullanılır.
+     * Otomatik olarak traceId üretilir ve MDC'ye eklenir.
      *
      * @param type    Hata tipi.
      * @param code    Hata kodu.
-     * @param message Hata mesajı.
+     * @param message Kullanıcıya gösterilecek hata mesajı.
      * @param status  HTTP durum kodu.
-     * @param cause   Hata nedeni.
+     * @param cause   Hata nedeni (detaylar için kullanılır).
      */
     public ErrorResponse(String type, String code, T message, HttpStatus status, Throwable cause) {
         super(type, code, message, false);
@@ -42,6 +56,8 @@ public class ErrorResponse<T> extends Response {
 
     /**
      * <b>{@code Throwable} nesnesinden {@code ErrorResponse} nesnesi oluşturur.</b>
+     * <p>
+     * Beklenmeyen hatalar için kullanılır. Generic hata mesajı ve HTTP 500 status code ile döner.
      *
      * @param cause Hata nedeni.
      */
@@ -54,8 +70,8 @@ public class ErrorResponse<T> extends Response {
     /**
      * <b>Hata nedenine ait detayları doldurur.</b>
      * <p>
-     * Bu metot, verilen {@code Throwable} nesnesi üzerinden stack trace'i kontrol eder ve mevcutsa hata detaylarını
-     * {@code ErrorDetail} nesnesi ile saklar.<br/> Mevcut değilse, hata detayları boş olarak kalır.
+     * Development ortamında frontend'e gönderilir, production'da null set edilir.
+     * Graylog'da traceId üzerinden izlenebilir.
      *
      * @param cause Hata nedeni olarak kullanılan {@link Throwable} nesnesi.
      */
