@@ -4,10 +4,8 @@ import com.kalayciburak.commonpackage.core.advice.exception.EntityNotFoundExcept
 import com.kalayciburak.commonpackage.core.advice.exception.ResourceNotFoundException;
 import com.kalayciburak.commonpackage.core.constant.Codes;
 import com.kalayciburak.commonpackage.core.constant.Messages;
-import com.kalayciburak.commonpackage.core.constant.Profiles;
 import com.kalayciburak.commonpackage.core.constant.Types;
 import com.kalayciburak.commonpackage.core.response.error.ErrorResponse;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -23,12 +21,10 @@ import java.util.NoSuchElementException;
  * <p>
  * Tüm exception'ları yakalar ve standart response formatında döner.
  * Her response için otomatik olarak traceId üretilir ve MDC'ye eklenir.
- * Development ortamında hata detayları frontend'e gönderilir, production'da gizlenir.
+ * Hata detayları frontend'e gönderilmez, sadece Graylog'a loglanır ve traceId ile aranabilir.
  */
 @RestControllerAdvice
 public class BaseExceptionHandler {
-    @Value("${spring.profiles.active:default}")
-    private String activeProfile;
 
     /**
      * <b>Genel exception'lar için handler.</b>
@@ -148,16 +144,13 @@ public class BaseExceptionHandler {
     /**
      * <b>ErrorResponse'u ResponseEntity olarak oluşturur.</b>
      * <p>
-     * Production ortamlarında hata detaylarını filtreler (detail null set edilir).
-     * Development ortamında tüm detaylar korunur.
-     * TraceId her durumda korunur, böylece loglarda takip edilebilir.
+     * Hata detayları {@code @JsonIgnore} ile işaretlenmiştir ve frontend'e gönderilmez.
+     * TraceId korunur, böylece Graylog'da loglarda takip edilebilir.
      *
      * @param errorResponse Oluşturulacak {@link ErrorResponse} nesnesi.
      * @return Frontend'e gönderilecek {@link ResponseEntity}.
      */
     public ResponseEntity<ErrorResponse<?>> buildResponseEntity(ErrorResponse<?> errorResponse) {
-        if (!isDevelopment()) errorResponse.setDetail(null);
-
         return new ResponseEntity<>(errorResponse, errorResponse.getStatus());
     }
 
@@ -176,14 +169,5 @@ public class BaseExceptionHandler {
         }
 
         return validationErrors;
-    }
-
-    /**
-     * <b>Aktif profilin development olup olmadığını kontrol eder.</b>
-     *
-     * @return Development profili ise {@code true} döner.
-     */
-    private boolean isDevelopment() {
-        return Profiles.DEVELOPMENT.contains(activeProfile);
     }
 }

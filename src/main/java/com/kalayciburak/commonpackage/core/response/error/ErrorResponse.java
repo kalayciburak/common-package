@@ -1,6 +1,6 @@
 package com.kalayciburak.commonpackage.core.response.error;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.kalayciburak.commonpackage.core.constant.Codes;
 import com.kalayciburak.commonpackage.core.constant.Messages;
 import com.kalayciburak.commonpackage.core.constant.Types;
@@ -12,15 +12,15 @@ import org.springframework.http.HttpStatus;
 /**
  * <b>Hata durumlarını temsil eden response nesnesi.</b>
  * <p>
- * ErrorDetail bilgileri development ortamında görüntülenir, production'da null set edilir.
- * Bu bilgiler Graylog'a traceId ile birlikte kaydedilir.
+ * ErrorDetail bilgileri frontend'e gönderilmez, sadece backend'de loglanır.
+ * Graylog'da traceId ile birlikte aranabilir.
  */
 @Setter
 @Getter
 public class ErrorResponse<T> extends Response {
     private HttpStatus status;
 
-    @JsonInclude(JsonInclude.Include.NON_NULL)
+    @JsonIgnore
     private ErrorDetail detail;
 
     /**
@@ -70,7 +70,7 @@ public class ErrorResponse<T> extends Response {
     /**
      * <b>Hata nedenine ait detayları doldurur.</b>
      * <p>
-     * Development ortamında frontend'e gönderilir, production'da null set edilir.
+     * Frontend'e gönderilmez, sadece loglama için kullanılır.
      * Graylog'da traceId üzerinden izlenebilir.
      *
      * @param cause Hata nedeni olarak kullanılan {@link Throwable} nesnesi.
