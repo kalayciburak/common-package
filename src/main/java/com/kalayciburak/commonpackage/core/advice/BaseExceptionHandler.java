@@ -18,20 +18,26 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import java.util.HashMap;
 import java.util.NoSuchElementException;
 
+/**
+ * <b>Global exception handler.</b>
+ * <p>
+ * Tüm exception'ları yakalar ve standart response formatında döner.
+ * Her response için otomatik olarak traceId üretilir ve MDC'ye eklenir.
+ * Development ortamında hata detayları frontend'e gönderilir, production'da gizlenir.
+ */
 @RestControllerAdvice
 public class BaseExceptionHandler {
     @Value("${spring.profiles.active:default}")
     private String activeProfile;
 
     /**
-     * <b>Genel istisnalar için işleyici tanımlar.</b>
+     * <b>Genel exception'lar için handler.</b>
      * <p>
-     * Bu işleyici, {@code Exception} ve {@code RuntimeException} türündeki istisnaları ve alt türlerini yakalar. İşlenmemiş
-     * genel hataları ele alarak sistem genelinde tutarlı bir hata yönetimi stratejisi sağlar. Bu yöntem, uygulamanın diğer
-     * bölümlerinde ayrı ayrı hata yönetimi gereksinimini azaltır.
+     * {@code Exception} ve {@code RuntimeException} türündeki tüm exception'ları yakalar.
+     * TraceId otomatik üretilir ve hata detayları Graylog'a kaydedilir.
      *
-     * @param exception yakalanacak istisna.
-     * @return Oluşturulan hata ile ilgili bilgileri içeren {@link ResponseEntity}.
+     * @param exception Yakalanan exception.
+     * @return TraceId ve kullanıcıya gösterilecek mesaj içeren {@link ResponseEntity}.
      */
     @ExceptionHandler({Exception.class, RuntimeException.class})
     public ResponseEntity<ErrorResponse<?>> handleGenericException(Exception exception) {
@@ -39,13 +45,12 @@ public class BaseExceptionHandler {
     }
 
     /**
-     * {@code IllegalArgumentException} türündeki istisnalar için özel bir işleyici tanımlar.
+     * <b>{@code IllegalArgumentException} için handler.</b>
      * <p>
-     * Bu tür istisnalar, metodlara geçersiz argümanlar gönderildiğinde ortaya çıkar. İstisna bilgileri, kullanıcıya geçersiz
-     * girişin neden olduğu hata hakkında bilgi vermek için kullanılır.
+     * Geçersiz argüman durumlarında çalışır. HTTP 400 döner.
      *
-     * @param exception yakalanacak istisna.
-     * @return Oluşturulan hata ile ilgili bilgileri içeren {@link ResponseEntity}.
+     * @param exception Yakalanan exception.
+     * @return TraceId ve kullanıcıya gösterilecek mesaj içeren {@link ResponseEntity}.
      */
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ErrorResponse<?>> handleIllegalArgumentException(IllegalArgumentException exception) {
@@ -60,12 +65,12 @@ public class BaseExceptionHandler {
     }
 
     /**
-     * {@code NoSuchElementException} türündeki istisnalar için özel bir işleyici tanımlar.
+     * <b>{@code NoSuchElementException} için handler.</b>
      * <p>
-     * Bu tür istisnalar, bir koleksiyonun veya veri yapısının içinde aranan elemanın bulunamadığında ortaya çıkar.
+     * Koleksiyon veya veri yapısında aranan eleman bulunamadığında çalışır. HTTP 404 döner.
      *
-     * @param exception yakalanacak istisna.
-     * @return Oluşturulan hata ile ilgili bilgileri içeren {@link ResponseEntity}.
+     * @param exception Yakalanan exception.
+     * @return TraceId ve kullanıcıya gösterilecek mesaj içeren {@link ResponseEntity}.
      */
     @ExceptionHandler(NoSuchElementException.class)
     public ResponseEntity<ErrorResponse<?>> handleNoSuchElementException(NoSuchElementException exception) {
@@ -80,12 +85,12 @@ public class BaseExceptionHandler {
     }
 
     /**
-     * {@code ResourceNotFoundException} türündeki istisnalar için özel bir işleyici tanımlar.
+     * <b>{@code ResourceNotFoundException} için handler.</b>
      * <p>
-     * Bu tür istisnalar, bir kaynağın bulunamadığında ortaya çıkar.
+     * Kaynak bulunamadığında çalışır. HTTP 404 döner.
      *
-     * @param exception yakalanacak istisna.
-     * @return Oluşturulan hata ile ilgili bilgileri içeren {@link ResponseEntity}.
+     * @param exception Yakalanan exception.
+     * @return TraceId ve kullanıcıya gösterilecek mesaj içeren {@link ResponseEntity}.
      */
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ErrorResponse<?>> handleResourceNotFoundException(ResourceNotFoundException exception) {
@@ -100,12 +105,12 @@ public class BaseExceptionHandler {
     }
 
     /**
-     * Custom {@code EntityNotFoundException} türündeki istisnalar için özel bir işleyici tanımlar.
+     * <b>{@code EntityNotFoundException} için handler.</b>
      * <p>
-     * Bu tür istisnalar, bir varlığın bulunamadığında ortaya çıkar.
+     * Database entity bulunamadığında çalışır. HTTP 404 döner.
      *
-     * @param exception yakalanacak istisna.
-     * @return Oluşturulan hata ile ilgili bilgileri içeren {@link ResponseEntity}.
+     * @param exception Yakalanan exception.
+     * @return TraceId ve kullanıcıya gösterilecek mesaj içeren {@link ResponseEntity}.
      */
     @ExceptionHandler(EntityNotFoundException.class)
     public ResponseEntity<ErrorResponse<?>> handleEntityNotFoundException(EntityNotFoundException exception) {
@@ -120,61 +125,65 @@ public class BaseExceptionHandler {
     }
 
     /**
-     * {@code MethodArgumentNotValidException} istisnasını yakalar ve bu türdeki doğrulama hatalarını işler.
+     * <b>{@code MethodArgumentNotValidException} için handler.</b>
      * <p>
-     * Bu işleyici, genellikle Spring MVC'nin otomatik doğrulama mekanizmaları tarafından fırlatılır ve kullanıcıya yapılan
-     * girişlerin neden geçersiz olduğuna dair ayrıntılı bilgiler sağlar.
+     * Validation hataları için çalışır. Field bazlı hata mesajları döner. HTTP 400 döner.
      *
-     * @param exception yakalanacak istisna.
-     * @return Doğrulama hatalarını içeren {@link ResponseEntity}.
+     * @param exception Yakalanan exception.
+     * @return TraceId ve validation hataları içeren {@link ResponseEntity}.
      */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse<?>> handleMethodArgumentNotValidException(MethodArgumentNotValidException exception) {
+        var validationErrors = extractValidationErrors(exception);
         var error = new ErrorResponse<>(
                 Types.Exception.VALIDATION,
                 Codes.METHOD_ARGUMENT_NOT_VALID,
-                Messages.Error.VALIDATION_ERROR,
+                validationErrors,
                 HttpStatus.BAD_REQUEST,
                 exception);
-        populateValidationErrors(exception, error);
 
         return buildResponseEntity(error);
     }
 
     /**
-     * <b>Hata nesnesini {@code ResponseEntity} olarak oluşturur.</b>
+     * <b>ErrorResponse'u ResponseEntity olarak oluşturur.</b>
+     * <p>
+     * Production ortamlarında hata detaylarını filtreler (detail null set edilir).
+     * Development ortamında tüm detaylar korunur.
+     * TraceId her durumda korunur, böylece loglarda takip edilebilir.
      *
-     * @param errorResponse oluşturulacak {@link ErrorResponse} nesnesi.
-     * @return Hata durumuna uygun {@link ResponseEntity} döner.
+     * @param errorResponse Oluşturulacak {@link ErrorResponse} nesnesi.
+     * @return Frontend'e gönderilecek {@link ResponseEntity}.
      */
     public ResponseEntity<ErrorResponse<?>> buildResponseEntity(ErrorResponse<?> errorResponse) {
-        if (isProdLikeProfile()) return new ResponseEntity<>(new ErrorResponse<>(errorResponse), errorResponse.getStatus());
+        if (!isDevelopment()) errorResponse.setDetail(null);
 
         return new ResponseEntity<>(errorResponse, errorResponse.getStatus());
     }
 
     /**
-     * <b>Validation hatalarını {@code BaseError} nesnesine ekler.</b>
+     * <b>Validation hatalarını Map formatında çıkarır.</b>
+     * <p>
+     * Field adı ve hata mesajı eşleşmesi döner.
      *
-     * @param exception     içerisinde validasyon hataları barındıran istisna.
-     * @param errorResponse hataların ekleneceği {@link ErrorResponse} nesnesi.
+     * @param exception Validation exception.
+     * @return Field bazlı hata mesajları.
      */
-    private static void populateValidationErrors(MethodArgumentNotValidException exception, ErrorResponse<String> errorResponse) {
-        var validationErrors = new HashMap<>();
+    private HashMap<String, String> extractValidationErrors(MethodArgumentNotValidException exception) {
+        var validationErrors = new HashMap<String, String>();
         for (FieldError fieldError : exception.getBindingResult().getFieldErrors()) {
             validationErrors.put(fieldError.getField(), fieldError.getDefaultMessage());
         }
 
-        errorResponse.getDetail().setDebugMessage(Messages.Error.VALIDATION_ERROR);
-        errorResponse.setMessage(validationErrors);
+        return validationErrors;
     }
 
     /**
-     * <b>Aktif profilin prod benzeri bir profil olup olmadığını kontrol eder.</b>
+     * <b>Aktif profilin development olup olmadığını kontrol eder.</b>
      *
-     * @return Aktif profil prod benzeri bir profil ise {@code true} döner.
+     * @return Development profili ise {@code true} döner.
      */
-    private boolean isProdLikeProfile() {
-        return Profiles.PRODUCTION.contains(activeProfile);
+    private boolean isDevelopment() {
+        return Profiles.DEVELOPMENT.contains(activeProfile);
     }
 }
