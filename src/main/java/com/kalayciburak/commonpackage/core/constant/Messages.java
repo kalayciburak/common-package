@@ -28,6 +28,15 @@ public final class Messages {
         public static final String ENTITY_EXISTS = "Kayıt zaten mevcut.";
     }
 
+    public static final class LogTemplate {
+        private static final String BASE = "Handler: {} | TraceId: {}";
+
+        public static final String WITH_MESSAGE = String.format("%s | Message: {}", BASE);
+        public static final String WITH_MESSAGE_AND_DETAIL = String.format("%s | Message: {} | Detail: {}", BASE);
+        public static final String WITH_RESPONSE = String.format("%s | Response: {}", BASE);
+        public static final String UNEXPECTED_ERROR = String.format("%s | %s", BASE, Error.UNEXPECTED);
+    }
+
     public static final class Inventory {
         public static final class Product {
             public static final String NOT_FOUND = "Herhangi bir ürün bulunamadı.";
