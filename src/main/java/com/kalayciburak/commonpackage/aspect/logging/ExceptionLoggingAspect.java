@@ -34,7 +34,6 @@ public class ExceptionLoggingAspect {
     @Before("@annotation(org.springframework.web.bind.annotation.ExceptionHandler)")
     public void beforeAdvice() {
         MDC.put("log_type", LOG_TYPE);
-        MDC.put("trace_id", TraceIdGenerator.get());
     }
 
     /**
@@ -86,8 +85,10 @@ public class ExceptionLoggingAspect {
      */
     private void logErrorResponse(String handlerInfo, String traceId, Object response) {
         var errorResponse = extractErrorResponse(response);
-        enrichMdcWithErrorInfo(errorResponse);
-        logError(handlerInfo, traceId, errorResponse);
+        if (errorResponse != null) {
+            enrichMdcWithErrorInfo(errorResponse);
+            logError(handlerInfo, traceId, errorResponse);
+        } else logUnexpectedResponse(handlerInfo, traceId, response);
     }
 
     /**
