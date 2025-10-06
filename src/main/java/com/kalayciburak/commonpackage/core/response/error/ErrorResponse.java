@@ -24,19 +24,6 @@ public class ErrorResponse<T> extends Response {
     private ErrorDetail detail;
 
     /**
-     * <b>Var olan bir {@code ErrorResponse} nesnesinden yeni hata nesnesi oluşturur.</b>
-     * <p>
-     * TraceId aynı kalır böylece loglarda takip edilebilir.
-     *
-     * @param response Kopyalanacak hata nesnesi.
-     */
-    public ErrorResponse(ErrorResponse<?> response) {
-        super(response.type, response.code, response.message, false, response.traceId);
-        this.status = response.status;
-        this.detail = response.detail;
-    }
-
-    /**
      * <b>Belirli hata bilgileri ve neden ile yeni bir {@code ErrorResponse} nesnesi oluşturur.</b>
      * <p>
      * Hata detayları internal olarak saklanır ve loglama için kullanılır.
@@ -62,9 +49,22 @@ public class ErrorResponse<T> extends Response {
      * @param cause Hata nedeni.
      */
     public ErrorResponse(Throwable cause) {
-        super(Types.Exception.DEFAULT, Codes.UNEXPECTED, Messages.Error.UNEXPECTED, false);
+        super(Types.Error.DEFAULT, Codes.UNEXPECTED, Messages.Error.UNEXPECTED, false);
         this.status = HttpStatus.INTERNAL_SERVER_ERROR;
         populateErrorDetails(cause);
+    }
+
+    /**
+     * <b>Var olan bir {@code ErrorResponse} nesnesinden yeni hata nesnesi oluşturur.</b>
+     * <p>
+     * TraceId aynı kalır böylece loglarda takip edilebilir.
+     *
+     * @param response Kopyalanacak hata nesnesi.
+     */
+    public ErrorResponse(ErrorResponse<?> response) {
+        super(response.type, response.code, response.message, false, response.traceId);
+        this.status = response.status;
+        this.detail = response.detail;
     }
 
     /**
