@@ -51,7 +51,7 @@ public class BaseExceptionHandler {
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ErrorResponse<?>> handleIllegalArgumentException(IllegalArgumentException exception) {
         var error = new ErrorResponse<>(
-                Types.Exception.ILLEGAL_ARGUMENT,
+                Types.Error.ILLEGAL_ARGUMENT,
                 Codes.ILLEGAL_ARGUMENT,
                 Messages.Error.INVALID_ARGUMENT,
                 HttpStatus.BAD_REQUEST,
@@ -71,7 +71,7 @@ public class BaseExceptionHandler {
     @ExceptionHandler(NoSuchElementException.class)
     public ResponseEntity<ErrorResponse<?>> handleNoSuchElementException(NoSuchElementException exception) {
         var error = new ErrorResponse<>(
-                Types.Exception.NO_SUCH_ELEMENT,
+                Types.Error.NO_SUCH_ELEMENT,
                 Codes.NO_SUCH_ELEMENT,
                 Messages.Error.NO_SUCH_ELEMENT,
                 HttpStatus.NOT_FOUND,
@@ -91,7 +91,7 @@ public class BaseExceptionHandler {
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ErrorResponse<?>> handleResourceNotFoundException(ResourceNotFoundException exception) {
         var error = new ErrorResponse<>(
-                Types.Exception.RESOURCE_NOT_FOUND,
+                Types.Error.RESOURCE_NOT_FOUND,
                 Codes.RESOURCE_NOT_FOUND,
                 Messages.Error.RESOURCE_NOT_FOUND,
                 HttpStatus.NOT_FOUND,
@@ -111,7 +111,7 @@ public class BaseExceptionHandler {
     @ExceptionHandler(EntityNotFoundException.class)
     public ResponseEntity<ErrorResponse<?>> handleEntityNotFoundException(EntityNotFoundException exception) {
         var error = new ErrorResponse<>(
-                Types.Exception.ENTITY_NOT_FOUND,
+                Types.Error.ENTITY_NOT_FOUND,
                 Codes.ENTITY_NOT_FOUND,
                 Messages.Error.ENTITY_NOT_FOUND,
                 HttpStatus.NOT_FOUND,
@@ -132,7 +132,7 @@ public class BaseExceptionHandler {
     public ResponseEntity<ErrorResponse<?>> handleMethodArgumentNotValidException(MethodArgumentNotValidException exception) {
         var validationErrors = extractValidationErrors(exception);
         var error = new ErrorResponse<>(
-                Types.Exception.VALIDATION,
+                Types.Error.VALIDATION,
                 Codes.METHOD_ARGUMENT_NOT_VALID,
                 validationErrors,
                 HttpStatus.BAD_REQUEST,
