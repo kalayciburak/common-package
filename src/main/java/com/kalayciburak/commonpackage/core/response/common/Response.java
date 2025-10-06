@@ -32,7 +32,7 @@ public abstract class Response {
      * @param message Kullanıcıya gösterilecek mesaj.
      * @param success İşlemin başarılı olup olmadığı.
      */
-    public Response(String type, String code, Object message, boolean success) {
+    protected Response(String type, String code, Object message, boolean success) {
         this.timestamp = LocalDateTime.now();
         this.traceId = TraceIdGenerator.generate();
         this.type = type;
