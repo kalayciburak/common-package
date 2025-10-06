@@ -4,6 +4,8 @@ import org.slf4j.MDC;
 
 import java.util.UUID;
 
+import static com.kalayciburak.commonpackage.core.constant.Messages.Error.UNSUPPORTED_OPERATION;
+
 /**
  * <b>Her request için benzersiz bir traceId üretir ve MDC'ye ekler.</b>
  * <p>
@@ -14,7 +16,7 @@ public final class TraceIdGenerator {
     private static final String TRACE_ID_KEY = "traceId";
 
     private TraceIdGenerator() {
-        throw new UnsupportedOperationException("Utility class cannot be instantiated");
+        throw new UnsupportedOperationException(UNSUPPORTED_OPERATION);
     }
 
     /**
@@ -25,6 +27,7 @@ public final class TraceIdGenerator {
     public static String generate() {
         String traceId = UUID.randomUUID().toString();
         MDC.put(TRACE_ID_KEY, traceId);
+
         return traceId;
     }
 
@@ -35,23 +38,5 @@ public final class TraceIdGenerator {
      */
     public static String get() {
         return MDC.get(TRACE_ID_KEY);
-    }
-
-    /**
-     * <b>Verilen traceId'yi MDC'ye ekler.</b>
-     *
-     * @param traceId Eklenecek traceId.
-     */
-    public static void set(String traceId) {
-        if (traceId != null && !traceId.isEmpty()) {
-            MDC.put(TRACE_ID_KEY, traceId);
-        }
-    }
-
-    /**
-     * <b>MDC'den traceId'yi temizler.</b>
-     */
-    public static void clear() {
-        MDC.remove(TRACE_ID_KEY);
     }
 }
