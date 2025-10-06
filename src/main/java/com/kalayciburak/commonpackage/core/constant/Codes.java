@@ -1,6 +1,8 @@
 package com.kalayciburak.commonpackage.core.constant;
 
 public final class Codes {
+    private Codes() {}
+
     public static final String UNEXPECTED = "5000";
     public static final String INVALID_USER = "1000";
     public static final String RESOURCE_NOT_FOUND = "1100";
@@ -24,25 +26,4 @@ public final class Codes {
     public static final String ENTITY_NOT_FOUND = "2900";
     public static final String ENTITY_EXISTS = "3000";
     public static final String NO_SUCH_ELEMENT = "3100";
-
-    public static final class Inventory {
-        public static final String PRODUCT_NOT_AVAILABLE = "9000";
-        public static final String PRODUCT_NOT_FOUND = "9100";
-        public static final String CATEGORY_NOT_FOUND = "9200";
-    }
-
-    public static final class Auth {
-        public static final String TOKEN_TYPE_MISMATCH = "3200";
-        public static final String TOKEN_BLACKLISTED = "3300";
-        public static final String OLD_PASSWORD_NOT_MATCH = "3400";
-        public static final String INVALID_ROLE_IDS = "3500";
-        public static final String INVALID_JWT = "3600";
-        public static final String BREACHED_PASSWORD = "3700";
-        public static final String ADMIN_CANNOT_BE_DELETED = "3800";
-        public static final String UNAUTHORIZED = "3900";
-        public static final String ACCESS_DENIED = "4000";
-        public static final String CONFLICT = "4100";
-        public static final String EMAIL_NOT_VERIFIED = "4200";
-        public static final String INVALID_VERIFICATION_TOKEN = "4300";
-    }
 }

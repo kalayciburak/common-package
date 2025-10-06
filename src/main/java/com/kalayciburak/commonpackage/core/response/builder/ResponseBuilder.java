@@ -19,6 +19,7 @@ import static org.springframework.http.HttpStatus.NOT_FOUND;
  * Bu sayede request yaşam döngüsü boyunca tüm loglar ilişkilendirilebilir.
  */
 public class ResponseBuilder {
+    private ResponseBuilder() {}
 
     /**
      * <b>Data ve mesaj ile success response oluşturur.</b>

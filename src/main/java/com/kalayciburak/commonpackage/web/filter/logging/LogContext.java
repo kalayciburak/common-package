@@ -6,6 +6,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.MDC;
 
 public class LogContext {
+    private LogContext() {}
+
     /**
      * Günlük kayıt işlemleri için Mapped Diagnostic Context (MDC) içerisine istek ve yanıt bilgilerini ekler.
      *

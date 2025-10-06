@@ -7,6 +7,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class HeaderUtils {
+    private HeaderUtils() {}
+
     /**
      * HTTP isteğine ait tüm başlık isimlerini ve karşılık gelen değerlerini içeren bir map yapısını döndürür.
      *
