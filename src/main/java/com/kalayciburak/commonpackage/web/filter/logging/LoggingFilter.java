@@ -15,7 +15,8 @@ import org.springframework.web.util.ContentCachingRequestWrapper;
 import org.springframework.web.util.ContentCachingResponseWrapper;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 import static com.kalayciburak.commonpackage.web.filter.logging.LogContext.populateMDC;
 import static com.kalayciburak.commonpackage.web.filter.util.HeaderUtils.getRequestHeadersInfo;
@@ -23,6 +24,13 @@ import static com.kalayciburak.commonpackage.web.filter.util.HeaderUtils.getResp
 
 @Component
 public class LoggingFilter extends OncePerRequestFilter {
+    /**
+     * Request ve response body'lerinin önbelleğe alınabileceği maksimum byte sayısı.
+     * <p>
+     * Büyük payload'ların (file upload, binary içerik vb.) belleği tüketmesini
+     * engellemek amacıyla üst sınır olarak kullanılır.
+     */
+    private static final int MAX_PAYLOAD_LENGTH = 64 * 1024;
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final Logger log = LoggerFactory.getLogger(LoggingFilter.class);
 
@@ -30,28 +38,31 @@ public class LoggingFilter extends OncePerRequestFilter {
      * Her HTTP isteğini işleyerek API istek ve yanıt detaylarını günlüğe kaydeder.
      *
      * <p>
-     * Bu metod, orijinal istek ve yanıtı önbellekleme sarmalayıcıları (wrapper) ile sarmalar, böylece içerik akışlarını
-     * okuyabilir. Ardından isteğin işlenme süresini ölçer, başlıklar, gövdeler ve diğer meta verileri Mapped Diagnostic
-     * Context (MDC) kullanarak loglar. Son olarak, yanıt içeriğinin istemciye iletilmesini sağlar ve MDC'yi temizler.
+     * Bu metod, orijinal istek ve yanıtı {@link ContentCachingRequestWrapper} ve
+     * {@link ContentCachingResponseWrapper} ile sarmalar. Böylece normalde stream
+     * olarak yalnızca bir kez okunabilen body içerikleri, işlem tamamlandıktan sonra
+     * güvenli bir şekilde loglanabilir hale gelir.
      * </p>
      *
-     * @param request     Gelen HTTP isteğini temsil eder
-     * @param response    Giden HTTP yanıtını temsil eder
-     * @param filterChain İsteği ve yanıtı zincirdeki bir sonraki elemana iletmek için kullanılan FilterChain nesnesi
-     * @throws ServletException Servlet hatası durumunda fırlatılır
-     * @throws IOException      Giriş/çıkış hatası durumunda fırlatılır
-     * @implNote <i>Normalde request ve response body'leri stream olarak okunur ve akış tamamlandığında tekrar erişilemez;
-     * {@code ContentCachingRequestWrapper} ve {@code ContentCachingResponseWrapper} sınıfları, bu akışları önbelleğe alır ve
-     * daha sonra tekrar okunabilir hale getirir.</i>
+     * <p>
+     * İstek işleme süresi ölçülür, header ve body bilgileri MDC (Mapped Diagnostic Context)
+     * içine yazılır ve response içeriği client'a geri aktarılır.
+     * </p>
+     *
+     * @param request     Gelen HTTP isteği
+     * @param response    Giden HTTP yanıtı
+     * @param filterChain Filter zinciri
+     * @throws ServletException Servlet hatası durumunda
+     * @throws IOException      IO hatası durumunda
      */
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
                                     FilterChain filterChain)
             throws ServletException, IOException {
-        var requestWrapper = new ContentCachingRequestWrapper(request);
-        var responseWrapper = new ContentCachingResponseWrapper(response);
 
+        var requestWrapper = new ContentCachingRequestWrapper(request, MAX_PAYLOAD_LENGTH);
+        var responseWrapper = new ContentCachingResponseWrapper(response);
         long startTime = System.currentTimeMillis();
 
         try {
@@ -65,43 +76,94 @@ public class LoggingFilter extends OncePerRequestFilter {
     }
 
     /**
-     * API istek ve yanıt bilgilerini, başlıkları, gövdeleri ve işleme süresini içerecek şekilde günlüğe kaydeder.
+     * HTTP request ve response'a ait header, body ve süre bilgilerini loglar.
      *
-     * @param request         İlgili HTTP isteğini temsil eden HttpServletRequest nesnesi
-     * @param responseWrapper Yanıtı içeren ContentCachingResponseWrapper nesnesi
-     * @param requestWrapper  İsteği içeren ContentCachingRequestWrapper nesnesi
-     * @param executionTime   İsteğin işlenme süresi (ms cinsinden)
-     * @throws IOException Karakter encode hatası durumunda fırlatılır
+     * <p>
+     * İçeriğin türüne göre (multipart, binary, image, video, audio vb.) body loglama
+     * otomatik olarak atlanabilir. Bu sayede log gürültüsü ve bellek tüketimi kontrol
+     * altında tutulur.
+     * </p>
+     *
+     * @param request         HTTP isteği
+     * @param responseWrapper Cache'lenmiş HTTP yanıtı
+     * @param requestWrapper  Cache'lenmiş HTTP isteği
+     * @param executionTime   İstek işleme süresi (ms)
+     * @throws IOException Header serileştirme hatası durumunda
      */
     private void logRequestResponse(HttpServletRequest request,
                                     ContentCachingResponseWrapper responseWrapper,
                                     ContentCachingRequestWrapper requestWrapper,
                                     long executionTime) throws IOException {
-        var requestBody = getJsonString(requestWrapper.getContentAsByteArray(), request.getCharacterEncoding());
-        var responseBody = getJsonString(responseWrapper.getContentAsByteArray(), request.getCharacterEncoding());
+        var reqCt = request.getContentType();
+        var resCt = responseWrapper.getContentType();
+        boolean skipReqBody = shouldSkipBody(reqCt);
+        boolean skipResBody = shouldSkipBody(resCt);
+
+        var requestBody = skipReqBody
+                ? "[SKIPPED: content-type=" + reqCt + "]"
+                : toString(requestWrapper.getContentAsByteArray(), request.getCharacterEncoding());
+
+        var responseBody = skipResBody
+                ? "[SKIPPED: content-type=" + resCt + "]"
+                : toString(responseWrapper.getContentAsByteArray(),
+                responseWrapper.getCharacterEncoding());
 
         var requestHeaders = OBJECT_MAPPER.writeValueAsString(getRequestHeadersInfo(request));
         var responseHeaders = OBJECT_MAPPER.writeValueAsString(getResponseHeadersInfo(responseWrapper));
 
-        populateMDC(request, responseWrapper, requestBody, responseBody, requestHeaders, responseHeaders, executionTime);
+        populateMDC(request, responseWrapper,
+                requestBody, responseBody,
+                requestHeaders, responseHeaders,
+                executionTime);
 
         log.debug("log_type={}, status_code={}, request_method={}, uri={}",
-                LogTypes.API_LOG, responseWrapper.getStatus(), request.getMethod(), request.getRequestURI());
+                LogTypes.API_LOG,
+                responseWrapper.getStatus(),
+                request.getMethod(),
+                request.getRequestURI());
     }
 
     /**
-     * Verilen byte dizisini belirtilen karakter encode'ine göre String'e dönüştürür.
+     * Verilen Content-Type değerine göre body'nin loglanıp loglanmaması gerektiğini belirler.
      *
-     * @param contentAsByteArray Byte dizisi
-     * @param characterEncoding  Kullanılacak karakter encode'i
-     * @return Byte dizisinden elde edilen String değer
-     * @throws RuntimeException Belirtilen encode desteklenmiyorsa fırlatılır
+     * <p>
+     * Multipart, binary ve medya içerikleri genellikle büyük veya okunabilir
+     * olmadığı için body loglamadan hariç tutulur.
+     * </p>
+     *
+     * @param contentType HTTP Content-Type header değeri
+     * @return true ise body loglanmaz, false ise loglanır
      */
-    private String getJsonString(byte[] contentAsByteArray, String characterEncoding) {
-        try {
-            return new String(contentAsByteArray, characterEncoding);
-        } catch (UnsupportedEncodingException exception) {
-            throw new RuntimeException(exception);
-        }
+    private boolean shouldSkipBody(String contentType) {
+        if (contentType == null) return false;
+        String ct = contentType.toLowerCase();
+
+        return switch (ct) {
+            case String s when s.startsWith("multipart/") -> true;
+            case String s when s.startsWith("application/octet-stream") -> true;
+            case String s when s.startsWith("image/") -> true;
+            case String s when s.startsWith("video/") -> true;
+            case String s when s.startsWith("audio/") -> true;
+            default -> false;
+        };
+    }
+
+    /**
+     * Byte dizisini güvenli bir şekilde String'e çevirir.
+     *
+     * <p>
+     * Encoding bilgisi yoksa UTF-8 varsayılır. Loglama işlemleri sırasında
+     * exception fırlatılmaması özellikle tercih edilmiştir.
+     * </p>
+     *
+     * @param bytes    İçerik byte dizisi
+     * @param encoding Karakter encoding bilgisi
+     * @return String'e dönüştürülmüş içerik
+     */
+    private String toString(byte[] bytes, String encoding) {
+        Charset charset = (encoding == null)
+                ? StandardCharsets.UTF_8
+                : Charset.forName(encoding);
+        return new String(bytes, charset);
     }
 }
