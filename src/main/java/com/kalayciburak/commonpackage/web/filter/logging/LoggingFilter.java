@@ -35,6 +35,21 @@ public class LoggingFilter extends OncePerRequestFilter {
     private static final Logger log = LoggerFactory.getLogger(LoggingFilter.class);
 
     /**
+     * Actuator endpoint'lerini loglama dışında tutar.
+     * <p>
+     * Admin Server ve monitoring araçları bu endpoint'leri sürekli poll ettiğinden
+     * gereksiz log kirliliğini önlemek için hariç tutulur.
+     * </p>
+     *
+     * @param request HTTP isteği
+     * @return true ise filtre atlanır, false ise filtre çalışır
+     */
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        return request.getRequestURI().contains("/actuator");
+    }
+
+    /**
      * Her HTTP isteğini işleyerek API istek ve yanıt detaylarını günlüğe kaydeder.
      *
      * <p>
